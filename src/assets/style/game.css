@@ -1,0 +1,63 @@
+.App {
+  text-align: center;
+  height: 100vh;
+  background-color: #261c2a;
+}
+
+.logo {
+  width: 250px;
+}
+
+.gif {
+  width: 100px;
+}
+
+.title {
+  padding: 20px;
+  text-align: center;
+  font-size: 38px;
+  font-weight: 600;
+  color: #a597b1;
+}
+
+.status {
+  padding-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.status h2 {
+  color: #a597b1;
+  margin: 0;
+  font-size: 32px;
+}
+
+.status img {
+  width: 66px;
+}
+
+.grid {
+  width: 500px;
+  height: 500px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin: auto;
+}
+
+.box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 25px;
+  height: 25px;
+  color: white;
+}
+
+.snake {
+  height: 100%;
+}
+
+.food {
+  width: 24px;
+}
