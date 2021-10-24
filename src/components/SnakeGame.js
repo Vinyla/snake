@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useInterval } from '../useInterval';
 import Food from './Food';
 import Snake from './Snake';
@@ -19,6 +19,8 @@ const DIRECTION = {
   BOTTOM: { x: 0, y: 1 }
 };
 
+let snakeDirection = DIRECTION.RIGHT;
+
 let randomFoodPosition = {
   x: Math.floor(Math.random() * FIELD_SIZE),
   y: Math.floor(Math.random() * FIELD_SIZE)
@@ -27,13 +29,12 @@ let randomFoodPosition = {
 const SnakeGame = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [snake, setSnake] = useState(SNAKE_START);
-  const [snakeDirection, setSnakeDirection] = useState();
   const [score, setScore] = useState(0);
   const [snakeSpeed, setSnakeSpeed] = useState(null);
   const [gameOver, setGameOver] = useState(false);
 
   // set food and snake on board
-  const getItem = (x, y, snake) => {
+  const getItem = (x, y, snake, randomFoodPosition) => {
     if (randomFoodPosition.x === x && randomFoodPosition.y === y) {
       return <Food />;
     }
@@ -57,70 +58,93 @@ const SnakeGame = () => {
     return x;
   };
 
-  // food and snake at the same place
+  // food and snake at the same place return true
   const eatsFood = (head, randomFoodPosition) => {
     return randomFoodPosition.x === head.x && randomFoodPosition.y === head.y;
   };
 
+  // snake position
   const newSnakePosition = (segments, direction) => {
     const [head] = segments;
+    // check if the head position crossing body position
+    let biteItself = false;
+    if (segments.length >= 2) {
+      biteItself = segments.some((tail, index) => {
+        if (index !== 0) {
+          return tail.x === segments[0].x && tail.y === segments[0].y;
+        } else {
+          return false;
+        }
+      });
+    }
+    if (biteItself) {
+      setSnakeSpeed(null);
+      setIsPlaying(false);
+      setGameOver(true);
+    }
     const newHead = {
       x: crossingBoundaries(head.x + direction.x),
       y: crossingBoundaries(head.y + direction.y)
     };
-    // set new food position
     if (eatsFood(newHead, randomFoodPosition)) {
-      // mish se ne smije pojavljivati na istom mjestu gdje je zmija
       randomFoodPosition = {
         x: Math.floor(Math.random() * FIELD_SIZE),
         y: Math.floor(Math.random() * FIELD_SIZE)
       };
       setScore(score + 1);
-      // setSnakeSpeed(snakeSpeed - 10); ???
+      setSnakeSpeed(snakeSpeed - 10);
       return [newHead, ...segments];
     } else {
       return [newHead, ...segments.slice(0, -1)];
     }
   };
 
-  // arrow snake control
-  useEffect(() => {
-    const moveSnake = (e) => {
-      switch (e.keyCode) {
-        case 38:
-          setSnakeDirection(DIRECTION.TOP);
-          break;
-        case 40:
-          setSnakeDirection(DIRECTION.BOTTOM);
-          break;
-        case 37:
-          setSnakeDirection(DIRECTION.LEFT);
-          break;
-        case 39:
-          setSnakeDirection(DIRECTION.RIGHT);
-          break;
-        default:
-          setSnakeDirection();
-          break;
-      }
-    };
-    document.addEventListener('keydown', moveSnake);
-    return () => {
-      document.removeEventListener('keydown', moveSnake);
-    };
-  }, []);
+  const setSnakeDirection = (direction) => {
+    snakeDirection = direction;
+  };
 
+  // arrow snake control
+  const moveSnake = (e) => {
+    switch (e.keyCode) {
+      case 38:
+        if (snakeDirection !== DIRECTION.BOTTOM) {
+          setSnakeDirection(DIRECTION.TOP);
+        }
+        break;
+      case 40:
+        if (snakeDirection !== DIRECTION.TOP) {
+          setSnakeDirection(DIRECTION.BOTTOM);
+        }
+        break;
+      case 37:
+        if (snakeDirection !== DIRECTION.RIGHT) {
+          setSnakeDirection(DIRECTION.LEFT);
+        }
+        break;
+      case 39:
+        if (snakeDirection !== DIRECTION.LEFT) {
+          setSnakeDirection(DIRECTION.RIGHT);
+        }
+        break;
+      default:
+        break;
+    }
+  };
+
+  // start game
   const playGame = () => {
     setIsPlaying(true);
     setSnake(SNAKE_START);
-    setSnakeDirection(DIRECTION.RIGHT);
     setSnakeSpeed(300);
     setGameOver(false);
+    setScore(0);
   };
 
   useInterval(() => {
     setSnake((segments) => newSnakePosition(segments, snakeDirection));
   }, snakeSpeed);
+
+  document.addEventListener('keyup', moveSnake);
 
   return (
     <div className='game'>
@@ -139,7 +163,7 @@ const SnakeGame = () => {
             <div key={x}>
               {FIELD_ROW.map((y) => (
                 <div className='box' key={y}>
-                  {getItem(x, y, snake) || '∙'}
+                  {getItem(x, y, snake, randomFoodPosition) || '∙'}
                 </div>
               ))}
             </div>
